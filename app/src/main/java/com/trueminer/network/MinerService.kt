@@ -128,7 +128,7 @@ class MinerService : Service() {
                     onBtcPoolStatus?.invoke("$btcPoolHost:$btcPoolPort", true)
                     val btcCpu = when (mode) {
                         MiningMode.CPU -> cpuWorkersForPool(hasDualPool = bchAddr.isNotEmpty())
-                        MiningMode.GPU -> max(2, numCores / 2)
+                        MiningMode.GPU -> 0
                         MiningMode.BOTH -> cpuWorkersForPool(hasDualPool = bchAddr.isNotEmpty())
                     }
                     val btcGpu = if (mode == MiningMode.GPU || mode == MiningMode.BOTH) 1 else 0
@@ -148,14 +148,15 @@ class MinerService : Service() {
                         onBchPoolStatus?.invoke("$bchPoolHost:$bchPoolPort", true)
                         val bchCpu = when (mode) {
                             MiningMode.CPU -> max(1, numCores / 2)
-                            MiningMode.GPU -> max(1, numCores / 4)
+                            MiningMode.GPU -> 0
                             MiningMode.BOTH -> max(1, numCores / 2)
                         }
                         val bchGpu = if (mode == MiningMode.GPU || mode == MiningMode.BOTH) 1 else 0
                         startPoolWorkers("BCH", bchJobQueue, bchCpu, bchGpu, assetManager)
                         startListener(bchPool, bchJobQueue) { max(1, bchCpu + bchGpu) }
                     } else {
-                        onBchPoolStatus?.invoke("Connection failed", false)
+                        onBchPoolStatus?.invoke("Failed: $bchPoolHost:$bchPoolPort", false)
+                        onStatusUpdate?.invoke("BCH pool connection failed: $bchPoolHost:$bchPoolPort")
                     }
                 } else if (bchAddr.isEmpty()) {
                     onBchPoolStatus?.invoke("Disabled", false)
