@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TrueMiner" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#00A86B</item>
+        <item name="colorPrimaryVariant">#007A4E</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#FFD166</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">#0B0F14</item>
+        <item name="android:navigationBarColor">#0B0F14</item>
+        <item name="android:windowBackground">#0B0F14</item>
+    </style>
+</resources>

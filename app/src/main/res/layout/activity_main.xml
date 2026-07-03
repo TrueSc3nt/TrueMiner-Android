@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B0F14"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_header"
+            android:padding="20dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TrueMiner GPU"
+                android:textSize="30sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CPU • Vulkan • OpenCL • BOTH mode"
+                android:textSize="14sp"
+                android:textColor="#B6C3D1"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvDeviceInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Checking mobile GPU support..."
+                android:textSize="12sp"
+                android:textColor="#FFD166"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ready. Choose CPU, GPU, or BOTH then press Start."
+            android:textSize="14sp"
+            android:textColor="#BFFFCB"
+            android:background="@drawable/bg_status"
+            android:layout_marginBottom="14dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wallets &amp; Pools"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bitcoin Address" android:textColor="#9BA8B5" android:textSize="12sp"/>
+            <EditText
+                android:id="@+id/etBtcAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter BTC address"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="text"
+                android:singleLine="true"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BTC Pool (host:port)" android:textColor="#9BA8B5" android:textSize="12sp"/>
+            <EditText
+                android:id="@+id/etBtcPool"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="solo.ckpool.org:3333"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="10dp" />
+
+            <Switch
+                android:id="@+id/switchBCH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enable BCH dual pool"
+                android:textColor="#D6DEE8"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etBchAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="BCH address"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="text"
+                android:singleLine="true"
+                android:enabled="false"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etBchPool"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="solo.bchpool.org:3333"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:enabled="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Performance"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mode" android:textColor="#9BA8B5" android:textSize="12sp"/>
+                    <Spinner
+                        android:id="@+id/spinnerMiningMode"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_field"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GPU Backend" android:textColor="#9BA8B5" android:textSize="12sp"/>
+                    <Spinner
+                        android:id="@+id/spinnerGpuBackend"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_field"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="CPU Cores" android:textColor="#9BA8B5" android:textSize="12sp"/>
+                    <EditText
+                        android:id="@+id/etCores"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_field"
+                        android:padding="10dp"
+                        android:inputType="number"
+                        android:gravity="center"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Manual Diff" android:textColor="#9BA8B5" android:textSize="12sp"/>
+                    <EditText
+                        android:id="@+id/etDifficulty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Auto"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#5F6B78"
+                        android:background="@drawable/bg_field"
+                        android:padding="10dp"
+                        android:inputType="numberDecimal"
+                        android:gravity="center"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Telegram Alerts"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <EditText
+                android:id="@+id/etTgToken"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Bot token (optional)"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="textPassword"
+                android:singleLine="true"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etTgChat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Chat ID (optional)"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#5F6B78"
+                android:background="@drawable/bg_field"
+                android:inputType="text"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="14dp">
+
+            <Button
+                android:id="@+id/btnStart"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:text="START"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_primary_button"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:text="STOP"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_stop_button"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:enabled="false" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="SAVE SETTINGS"
+            android:textColor="#DDE7F1"
+            android:background="@drawable/bg_save_button"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="14dp" />
+
+        <TextView
+            android:id="@+id/tvHashrate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hashrate: 0 H/s"
+            android:textColor="#FFD166"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:padding="14dp"
+            android:layout_marginBottom="14dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Shares Log"
+            android:textColor="#9BA8B5"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvShares"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:text=""
+            android:textColor="#B8C3CF"
+            android:textSize="11sp"
+            android:background="@drawable/bg_field"
+            android:padding="10dp"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
+</ScrollView>
