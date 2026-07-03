@@ -60,6 +60,10 @@ class MinerService : Service() {
     var onHashrateUpdate: ((String) -> Unit)? = null
     var onShareFoundCallback: ((ShareResult) -> Unit)? = null
     var onTelegramMessage: ((String) -> Unit)? = null
+    var onBtcPoolStatus: ((String, Boolean) -> Unit)? = null
+    var onBchPoolStatus: ((String, Boolean) -> Unit)? = null
+    var onWorkerCount: ((Int) -> Unit)? = null
+    var onGpuFallback: ((String) -> Unit)? = null
 
     inner class MinerBinder : Binder() {
         fun getService(): MinerService = this@MinerService
@@ -121,12 +125,18 @@ class MinerService : Service() {
                     btcPools.add(btcPool)
                     updateNotification("Connected to BTC pool")
                     onStatusUpdate?.invoke("Connected to BTC $btcPoolHost:$btcPoolPort")
-                    val btcCpu = cpuWorkersForPool(hasDualPool = bchAddr.isNotEmpty())
+                    onBtcPoolStatus?.invoke("$btcPoolHost:$btcPoolPort", true)
+                    val btcCpu = when (mode) {
+                        MiningMode.CPU -> cpuWorkersForPool(hasDualPool = bchAddr.isNotEmpty())
+                        MiningMode.GPU -> max(2, numCores / 2)
+                        MiningMode.BOTH -> cpuWorkersForPool(hasDualPool = bchAddr.isNotEmpty())
+                    }
                     val btcGpu = if (mode == MiningMode.GPU || mode == MiningMode.BOTH) 1 else 0
                     startPoolWorkers("BTC", btcJobQueue, btcCpu, btcGpu, assetManager)
                     startListener(btcPool, btcJobQueue) { max(1, btcCpu + btcGpu) }
                 } else {
                     onStatusUpdate?.invoke("Could not connect to BTC pool")
+                    onBtcPoolStatus?.invoke("Connection failed", false)
                 }
 
                 if (bchAddr.isNotEmpty() && bchPoolHost.isNotEmpty()) {
@@ -135,11 +145,20 @@ class MinerService : Service() {
                         bchPools.add(bchPool)
                         updateNotification("Connected to BTC + BCH pools")
                         onStatusUpdate?.invoke("Connected to BCH $bchPoolHost:$bchPoolPort")
-                        val bchCpu = if (mode == MiningMode.GPU) 0 else max(1, numCores / 2)
+                        onBchPoolStatus?.invoke("$bchPoolHost:$bchPoolPort", true)
+                        val bchCpu = when (mode) {
+                            MiningMode.CPU -> max(1, numCores / 2)
+                            MiningMode.GPU -> max(1, numCores / 4)
+                            MiningMode.BOTH -> max(1, numCores / 2)
+                        }
                         val bchGpu = if (mode == MiningMode.GPU || mode == MiningMode.BOTH) 1 else 0
                         startPoolWorkers("BCH", bchJobQueue, bchCpu, bchGpu, assetManager)
                         startListener(bchPool, bchJobQueue) { max(1, bchCpu + bchGpu) }
+                    } else {
+                        onBchPoolStatus?.invoke("Connection failed", false)
                     }
+                } else if (bchAddr.isEmpty()) {
+                    onBchPoolStatus?.invoke("Disabled", false)
                 }
 
                 val engine = when (mode) {
@@ -150,6 +169,7 @@ class MinerService : Service() {
                 val message = "Mining with ${workers.size} workers ($engine)"
                 updateNotification(message)
                 onStatusUpdate?.invoke(message)
+                onWorkerCount?.invoke(workers.size)
                 startStatsReporter()
             } catch (e: Exception) {
                 Log.e(TAG, "Start failed", e)
@@ -193,7 +213,12 @@ class MinerService : Service() {
                 resultCallback = ::onShareFound,
                 shutdown = shutdown,
                 hashCount = hashCount,
-                statusCallback = { onStatusUpdate?.invoke(it) }
+                statusCallback = { msg ->
+                    onStatusUpdate?.invoke(msg)
+                    if (msg.startsWith("GPU_SLOW:")) {
+                        onGpuFallback?.invoke(msg.removePrefix("GPU_SLOW: ").trim())
+                    }
+                }
             )
             Thread(worker, "$poolPrefix-GPU-$i").also { it.start(); workers.add(it) }
         }
@@ -416,7 +441,11 @@ class MinerService : Service() {
         bchPools.forEach { it.disconnect() }
         btcPools.clear()
         bchPools.clear()
+        NativeMiner.cleanup()
         onHashrateUpdate?.invoke("Hashrate: 0 H/s")
+        onBtcPoolStatus?.invoke("Disconnected", false)
+        onBchPoolStatus?.invoke("Disconnected", false)
+        onWorkerCount?.invoke(0)
         try { stopForeground(true) } catch (_: Exception) {}
         if (stopSelfAfter) stopSelf()
     }

@@ -25,6 +25,7 @@ object NativeMiner {
         backendId: Int,
         assetManager: AssetManager?
     ): NativeScanResult
+    private external fun nativeCleanup()
 
     fun isLoaded(): Boolean = loaded
 
@@ -53,5 +54,12 @@ object NativeMiner {
         } catch (t: Throwable) {
             NativeScanResult(false, 0L, ByteArray(32), 0L, "native", t.message ?: t.javaClass.simpleName)
         }
+    }
+
+    fun cleanup() {
+        if (!loaded) return
+        try {
+            nativeCleanup()
+        } catch (_: Throwable) {}
     }
 }

@@ -54,6 +54,9 @@ class GPUMinerWorker(
                 if (result.error.isNotEmpty() && result.error != lastError) {
                     lastError = result.error
                     statusCallback?.invoke("GPU: ${result.error}")
+                    if (result.error.contains("GPU unavailable") || result.error.contains("fallback")) {
+                        statusCallback?.invoke("GPU_SLOW: GPU fell back to single-threaded CPU. Consider using CPU mode for better performance.")
+                    }
                 }
 
                 if (result.hashesDone <= 0L) {

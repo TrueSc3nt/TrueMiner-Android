@@ -47,6 +47,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvHashrate: TextView
     private lateinit var tvShares: TextView
     private lateinit var tvDeviceInfo: TextView
+    private lateinit var tvBtcPoolStatus: TextView
+    private lateinit var tvBchPoolStatus: TextView
+    private lateinit var tvWorkers: TextView
 
     private val prefs by lazy { getSharedPreferences("trueminer_settings", Context.MODE_PRIVATE) }
 
@@ -58,10 +61,34 @@ class MainActivity : AppCompatActivity() {
             minerService?.onHashrateUpdate = { runOnUiThread { tvHashrate.text = it } }
             minerService?.onShareFoundCallback = { share ->
                 runOnUiThread {
-                    tvShares.append("${share.poolName} ${share.backend}: nonce=${String.format("%08x", share.nonce)} diff=${String.format("%.4f", share.difficulty)}\n")
+                    val prefix = if (share.poolName == "BTC") "₿" else "₿" // Both use BTC symbol but different labels
+                    val poolLabel = if (share.poolName == "BTC") "BTC" else "BCH"
+                    val engineLabel = if (share.isGPU) "GPU" else "CPU"
+                    tvShares.append("[$poolLabel] $engineLabel nonce=${String.format("%08x", share.nonce)} diff=${String.format("%.2f", share.difficulty)}\n")
                 }
             }
             minerService?.onTelegramMessage = { msg -> runOnUiThread { tvStatus.text = "Telegram: $msg" } }
+            minerService?.onBtcPoolStatus = { addr, connected ->
+                runOnUiThread {
+                    tvBtcPoolStatus.text = if (connected) "BTC: $addr" else "BTC: $addr"
+                    tvBtcPoolStatus.setTextColor(if (connected) 0xFF4CAF50.toInt() else 0xFFFF6B6B.toInt())
+                }
+            }
+            minerService?.onBchPoolStatus = { addr, connected ->
+                runOnUiThread {
+                    tvBchPoolStatus.text = if (connected) "BCH: $addr" else "BCH: $addr"
+                    tvBchPoolStatus.setTextColor(if (connected) 0xFF4CAF50.toInt() else 0xFFFF6B6B.toInt())
+                }
+            }
+            minerService?.onWorkerCount = { count ->
+                runOnUiThread { tvWorkers.text = "$count workers" }
+            }
+            minerService?.onGpuFallback = { msg ->
+                runOnUiThread {
+                    tvStatus.text = msg
+                    Toast.makeText(this@MainActivity, "GPU fell back to CPU - GPU mode may be slower", Toast.LENGTH_LONG).show()
+                }
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -101,6 +128,9 @@ class MainActivity : AppCompatActivity() {
         tvHashrate = findViewById(R.id.tvHashrate)
         tvShares = findViewById(R.id.tvShares)
         tvDeviceInfo = findViewById(R.id.tvDeviceInfo)
+        tvBtcPoolStatus = findViewById(R.id.tvBtcPoolStatus)
+        tvBchPoolStatus = findViewById(R.id.tvBchPoolStatus)
+        tvWorkers = findViewById(R.id.tvWorkers)
         tvShares.movementMethod = ScrollingMovementMethod()
     }
 
@@ -194,6 +224,11 @@ class MainActivity : AppCompatActivity() {
 
         saveSettings()
         tvShares.text = ""
+        tvBtcPoolStatus.text = "BTC: Connecting..."
+        tvBtcPoolStatus.setTextColor(0xFFFFD166.toInt())
+        tvBchPoolStatus.text = "BCH: Connecting..."
+        tvBchPoolStatus.setTextColor(0xFFFFD166.toInt())
+        tvWorkers.text = "Starting..."
         minerService?.startMining(
             btcAddr = btcAddr,
             bchAddr = bchAddr,
@@ -219,7 +254,12 @@ class MainActivity : AppCompatActivity() {
         btnStart.isEnabled = true
         btnStop.isEnabled = false
         tvStatus.text = "Stopped"
-        tvHashrate.text = "Hashrate: 0 H/s"
+        tvHashrate.text = "0 H/s"
+        tvBtcPoolStatus.text = "BTC: Disconnected"
+        tvBtcPoolStatus.setTextColor(0xFFFF6B6B.toInt())
+        tvBchPoolStatus.text = if (switchBCH.isChecked) "BCH: Disconnected" else "BCH: Off"
+        tvBchPoolStatus.setTextColor(if (switchBCH.isChecked) 0xFFFF6B6B.toInt() else 0xFF888888.toInt())
+        tvWorkers.text = "0 workers"
     }
 
     private fun parsePool(text: String, defaultPort: Int): Pair<String, Int> {
