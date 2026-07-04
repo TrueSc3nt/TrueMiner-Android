@@ -61,11 +61,14 @@ class MainActivity : AppCompatActivity() {
             minerService?.onHashrateUpdate = { runOnUiThread { tvHashrate.text = it } }
             minerService?.onShareFoundCallback = { share ->
                 runOnUiThread {
-                    val prefix = if (share.poolName == "BTC") "₿" else "₿" // Both use BTC symbol but different labels
                     val poolLabel = if (share.poolName == "BTC") "BTC" else "BCH"
                     val engineLabel = if (share.isGPU) "GPU" else "CPU"
-                    tvShares.append("[$poolLabel] $engineLabel nonce=${String.format("%08x", share.nonce)} diff=${String.format("%.2f", share.difficulty)}\n")
+                    val diffStr = minerService?.formatDifficultyForUI(share.difficulty) ?: String.format("diff=%.4f", share.difficulty)
+                    tvShares.append("[$poolLabel] $engineLabel ${String.format("%08x", share.nonce)} $diffStr\n")
                 }
+            }
+            minerService?.onLogMessage = { msg ->
+                runOnUiThread { tvShares.append("$msg\n") }
             }
             minerService?.onTelegramMessage = { msg -> runOnUiThread { tvStatus.text = "Telegram: $msg" } }
             minerService?.onBtcPoolStatus = { addr, connected ->
@@ -81,7 +84,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             minerService?.onWorkerCount = { count ->
-                runOnUiThread { tvWorkers.text = "$count workers" }
+                runOnUiThread {
+                    val cpuCount = count // Will be overridden by log message
+                    tvWorkers.text = "$count workers"
+                }
             }
             minerService?.onGpuFallback = { msg ->
                 runOnUiThread {

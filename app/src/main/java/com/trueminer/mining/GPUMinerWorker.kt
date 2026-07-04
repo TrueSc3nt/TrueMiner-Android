@@ -65,6 +65,7 @@ class GPUMinerWorker(
                 }
 
                 hashCount.addAndGet(result.hashesDone)
+                statusCallback?.invoke("GPU batch: ${result.hashesDone} hashes via ${result.backendUsed}")
 
                 if (result.found) {
                     val diff = try { SHA256Miner.DIFF1.toDouble() / BigInteger(1, result.hash).toDouble() } catch (_: Exception) { 0.0 }

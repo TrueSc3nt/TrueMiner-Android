@@ -64,6 +64,11 @@ class MinerService : Service() {
     var onBchPoolStatus: ((String, Boolean) -> Unit)? = null
     var onWorkerCount: ((Int) -> Unit)? = null
     var onGpuFallback: ((String) -> Unit)? = null
+    var onLogMessage: ((String) -> Unit)? = null
+
+    var bestShareDiff = 0.0
+    var totalSharesFound = 0
+    var totalSharesAccepted = 0
 
     inner class MinerBinder : Binder() {
         fun getService(): MinerService = this@MinerService
@@ -170,7 +175,15 @@ class MinerService : Service() {
                 val message = "Mining with ${workers.size} workers ($engine)"
                 updateNotification(message)
                 onStatusUpdate?.invoke(message)
+                val cpuCount = workers.count { it.name.contains("CPU") }
+                val gpuCount = workers.count { it.name.contains("GPU") }
+                val workerText = buildString {
+                    if (cpuCount > 0) append("CPU:$cpuCount")
+                    if (gpuCount > 0) { if (isNotEmpty()) append(" + "); append("GPU:$gpuCount") }
+                    if (isEmpty()) append("${workers.size} workers")
+                }
                 onWorkerCount?.invoke(workers.size)
+                onLogMessage?.invoke("Workers: $workerText | $engine mode | BTC: ${btcPools.firstOrNull()?.connected?.let { if (it) "connected" else "failed" } ?: "off"}${if (bchAddr.isNotEmpty()) " | BCH: ${bchPools.firstOrNull()?.connected?.let { if (it) "connected" else "failed" } ?: "failed"}" else ""}")
                 startStatsReporter()
             } catch (e: Exception) {
                 Log.e(TAG, "Start failed", e)
@@ -353,16 +366,23 @@ class MinerService : Service() {
         val accepted = pool?.submit(result.jobId, result.en2, result.ntime, String.format("%08x", Integer.reverseBytes(result.nonce))) ?: false
         lastShareTime = System.currentTimeMillis()
         shareCount++
+        totalSharesFound++
+        if (accepted) totalSharesAccepted++
+        if (result.difficulty > bestShareDiff) bestShareDiff = result.difficulty
         val engine = if (result.isGPU) result.backend else "CPU"
-        val text = "${result.poolName} share ${if (accepted) "accepted" else "submitted"} via $engine diff=${String.format("%.4f", result.difficulty)}"
+        val diffStr = formatDifficulty(result.difficulty)
+        val bestStr = formatDifficulty(bestShareDiff)
+        val text = "${result.poolName} share ${if (accepted) "ACCEPTED" else "submitted"} via $engine $diffStr"
         updateNotification(text)
         onShareFoundCallback?.invoke(result)
         onStatusUpdate?.invoke(text)
+        onLogMessage?.invoke("${result.poolName} $engine ${formatNonce(result.nonce)} $diffStr | Best: $bestStr | Shares: $totalSharesFound/$totalSharesAccepted accepted")
         sendTelegram("${result.poolName} share found\nEngine: $engine\nAccepted: $accepted\nDiff: ${String.format("%.6f", result.difficulty)}\nNonce: ${String.format("%08x", result.nonce)}")
     }
 
     private fun startStatsReporter() {
         statsThread?.interrupt()
+        var logInterval = 0
         statsThread = Thread {
             var last = System.currentTimeMillis()
             while (!shutdown.get()) {
@@ -373,9 +393,15 @@ class MinerService : Service() {
                 last = now
                 val h = hashCount.getAndSet(0)
                 val rate = formatHashrate(h / elapsed)
+                val total = hashCount.get() + h
                 val status = "Hashrate: $rate"
                 onHashrateUpdate?.invoke(status)
                 updateNotification("$rate • ${workers.size} workers • Diff ${String.format("%.2f", currentDiff)}")
+                logInterval++
+                if (logInterval % 5 == 0) {
+                    val bestStr = if (bestShareDiff > 0) "Best: ${formatDifficulty(bestShareDiff)}" else "Best: none"
+                    onLogMessage?.invoke("${formatHashrate(h / elapsed)} | ${workers.size} workers | Diff ${String.format("%.2f", currentDiff)} | $bestStr")
+                }
             }
         }.also { it.start() }
     }
@@ -385,7 +411,19 @@ class MinerService : Service() {
         h >= 1e9 -> String.format("%.2f GH/s", h / 1e9)
         h >= 1e6 -> String.format("%.2f MH/s", h / 1e6)
         h >= 1e3 -> String.format("%.2f KH/s", h / 1e3)
-        else -> String.format("%.2f H/s", h)
+        else -> String.format("%.0f H/s", h)
+    }
+
+    private fun formatDifficulty(diff: Double): String {
+        val hashes = diff * 4294967296.0
+        return "diff=${String.format("%.4f", diff)} (${formatHashrate(hashes)})"
+    }
+
+    private fun formatNonce(nonce: Int): String = String.format("0x%08X", nonce)
+
+    fun formatDifficultyForUI(diff: Double): String {
+        val hashes = diff * 4294967296.0
+        return "diff=${String.format("%.4f", diff)} (${formatHashrate(hashes)})"
     }
 
     private fun sendTelegram(message: String) {
